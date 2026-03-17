@@ -55,6 +55,63 @@ class TelegramService
     }
 
     /**
+     * Set the Telegram bot webhook URL.
+     *
+     * @param string $url The webhook URL to register.
+     * @return array{success: bool, message: string}
+     */
+    public function setWebhook(string $url): array
+    {
+        $token = $this->getBotToken();
+        if (!$token) {
+            return ['success' => false, 'message' => 'No Telegram bot token configured.'];
+        }
+
+        try {
+            $response = Http::timeout(15)
+                ->post("https://api.telegram.org/bot{$token}/setWebhook", [
+                    'url' => $url,
+                ]);
+
+            if ($response->successful() && ($response->json('ok') === true)) {
+                return ['success' => true, 'message' => 'Webhook set successfully to ' . $url];
+            }
+
+            return ['success' => false, 'message' => 'Failed to set webhook: ' . ($response->json('description') ?? 'Unknown error')];
+        } catch (\Exception $e) {
+            Log::error('TelegramService::setWebhook error', ['error' => $e->getMessage()]);
+            return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Get current webhook info from the Telegram API.
+     *
+     * @return array Telegram webhook info (url, pending_update_count, etc.) or empty defaults.
+     */
+    public function getWebhookInfo(): array
+    {
+        $token = $this->getBotToken();
+        if (!$token) {
+            return ['url' => '', 'pending_update_count' => 0];
+        }
+
+        try {
+            $response = Http::timeout(10)
+                ->get("https://api.telegram.org/bot{$token}/getWebhookInfo");
+
+            if ($response->successful() && ($response->json('ok') === true)) {
+                return $response->json('result');
+            }
+
+            return ['url' => '', 'pending_update_count' => 0];
+        } catch (\Exception $e) {
+            Log::error('TelegramService::getWebhookInfo error', ['error' => $e->getMessage()]);
+            return ['url' => '', 'pending_update_count' => 0];
+        }
+    }
+
+    /**
      * Send a text message.
      *
      * @param string $message Message text (supports HTML).
