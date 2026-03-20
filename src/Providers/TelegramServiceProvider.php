@@ -34,7 +34,7 @@ class TelegramServiceProvider extends ServiceProvider
     {
         view()->composer('layouts.app', function ($view) {
             if (config('hexa.app_controls_sidebar', false)) return;
-            $view->getFactory()->startPush('sidebar-menu', view('telegram::partials.sidebar-menu')->render());
+            $view->getFactory()->startPush('sidebar-sandbox', view('telegram::partials.sidebar-menu')->render());
         });
     }
 }
