@@ -13,5 +13,28 @@ class TelegramServiceProvider extends ServiceProvider
         $this->app->singleton(TelegramService::class);
     }
 
-    public function boot(): void {}
+    /**
+     * Bootstrap package resources.
+     *
+     * @return void
+     */
+    public function boot(): void
+    {
+        $this->loadRoutesFrom(__DIR__ . '/../../routes/telegram.php');
+        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'telegram');
+        $this->registerSidebarItems();
+    }
+
+    /**
+     * Push sidebar menu items into core layout stacks.
+     *
+     * @return void
+     */
+    private function registerSidebarItems(): void
+    {
+        view()->composer('layouts.app', function ($view) {
+            if (config('hexa.app_controls_sidebar', false)) return;
+            $view->getFactory()->startPush('sidebar-menu', view('telegram::partials.sidebar-menu')->render());
+        });
+    }
 }
