@@ -22,7 +22,12 @@ class TelegramServiceProvider extends ServiceProvider
     {
         $this->loadRoutesFrom(__DIR__ . '/../../routes/telegram.php');
         $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'telegram');
-        $this->registerSidebarItems();
+
+        // Sidebar links — registered via PackageRegistryService with auto permission checks
+        if (!config('hexa.app_controls_sidebar', false)) {
+            $registry = app(\hexa_core\Services\PackageRegistryService::class);
+            $registry->registerSidebarLink('telegram.index', 'Telegram', 'M12 19l9 2-9-18-9 18 9-2zm0 0v-8', 'Sandbox', 'telegram', 82);
+        }
     }
 
     /**
