@@ -28,6 +28,13 @@ class TelegramServiceProvider extends ServiceProvider
             $registry = app(\hexa_core\Services\PackageRegistryService::class);
             $registry->registerSidebarLink('telegram.index', 'Telegram', 'M12 19l9 2-9-18-9 18 9-2zm0 0v-8', 'Sandbox', 'telegram', 82);
         }
-    }
+    
+        // Documentation
+        if (class_exists(\hexa_core\Services\DocumentationService::class)) {
+            app(\hexa_core\Services\DocumentationService::class)->register('telegram', 'Telegram Bot', 'hexawebsystems/laravel-hexa-package-telegram', [
+                ['title' => 'Overview', 'content' => '<p>Telegram Bot API integration for notifications and 2FA verification.</p>'],
+            ]);
+        }
+}
 
 }
