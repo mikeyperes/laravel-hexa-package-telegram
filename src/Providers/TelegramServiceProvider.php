@@ -29,6 +29,8 @@ class TelegramServiceProvider extends ServiceProvider
         if (method_exists($registry, 'registerPackage')) {
             $registry->registerPackage('telegram', 'hexawebsystems/laravel-hexa-package-telegram', [
             'title' => 'Telegram',
+            'color' => 'sky',
+            'icon' => 'M12 19l9 2-9-18-9 18 9-2zm0 0v-8',
             'docsSlug' => 'telegram',
             'instructions' => [
                 'Create a Telegram bot with BotFather and save the bot token in the host app Telegram settings.',
