@@ -23,11 +23,20 @@ class TelegramServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__ . '/../../routes/telegram.php');
         $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'telegram');
 
-        // Sidebar links — registered via PackageRegistryService with auto permission checks
-        if (!config('hexa.app_controls_sidebar', false)) {
-            $registry = app(\hexa_core\Services\PackageRegistryService::class);
-            $registry->registerSidebarLink('telegram.index', 'Telegram', 'M12 19l9 2-9-18-9 18 9-2zm0 0v-8', 'Sandbox', 'telegram', 82);
-        }
+        // Sidebar links — package-owned and auto-wired into the core registry.
+        $registry = app(\hexa_core\Services\PackageRegistryService::class);
+        $registry->registerSidebarLink('telegram.index', 'Telegram', 'M12 19l9 2-9-18-9 18 9-2zm0 0v-8', 'Sandbox', 'telegram', 82);
+        $registry->registerPackage('telegram', 'hexawebsystems/laravel-hexa-package-telegram', [
+            'title' => 'Telegram',
+            'docsSlug' => 'telegram',
+            'instructions' => [
+                'Create a Telegram bot with BotFather and save the bot token in the host app Telegram settings.',
+            ],
+            'apiLinks' => [
+                ['label' => 'BotFather', 'url' => 'https://t.me/BotFather'],
+                ['label' => 'Telegram Bot API', 'url' => 'https://core.telegram.org/bots/api'],
+            ],
+        ]);
     
         // Documentation
         if (class_exists(\hexa_core\Services\DocumentationService::class)) {
@@ -35,6 +44,5 @@ class TelegramServiceProvider extends ServiceProvider
                 ['title' => 'Overview', 'content' => '<p>Telegram Bot API integration for notifications and 2FA verification.</p>'],
             ]);
         }
-}
-
+    }
 }
