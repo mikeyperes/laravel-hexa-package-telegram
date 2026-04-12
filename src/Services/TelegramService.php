@@ -2,216 +2,43 @@
 
 namespace hexa_package_telegram\Services;
 
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use hexa_core\Models\Setting;
+use hexa_package_telegram\Contracts\TelegramPushContract;
+use hexa_package_telegram\Domains\Bot\TelegramBotClient;
 
 class TelegramService
 {
-    /**
-     * @return string|null
-     */
-    private function getBotToken(): ?string
-    {
-        return Setting::getValue('telegram_bot_token');
-    }
+    public function __construct(
+        protected TelegramBotClient $botClient,
+        protected TelegramPushContract $push,
+    ) {}
 
-    /**
-     * @return string|null
-     */
-    private function getDefaultChatId(): ?string
-    {
-        return Setting::getValue('telegram_chat_id');
-    }
-
-    /**
-     * Test the bot token by calling getMe.
-     *
-     * @param string|null $token Override token to test.
-     * @return array{success: bool, message: string}
-     */
     public function testBotToken(?string $token = null): array
     {
-        $tk = $token ?? $this->getBotToken();
-        if (!$tk) {
-            return ['success' => false, 'message' => 'No Telegram bot token configured.'];
-        }
-
-        try {
-            $response = Http::timeout(10)
-                ->get("https://api.telegram.org/bot{$tk}/getMe");
-
-            if ($response->successful()) {
-                $data = $response->json();
-                if ($data['ok'] ?? false) {
-                    $bot = $data['result'];
-                    return ['success' => true, 'message' => "Bot connected: @{$bot['username']} ({$bot['first_name']})."];
-                }
-            }
-            return ['success' => false, 'message' => 'Invalid bot token.'];
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
-        }
+        return $this->botClient->testBotToken($token)->toArray();
     }
 
-    /**
-     * Set the Telegram bot webhook URL.
-     *
-     * @param string $url The webhook URL to register.
-     * @return array{success: bool, message: string}
-     */
     public function setWebhook(string $url): array
     {
-        $token = $this->getBotToken();
-        if (!$token) {
-            return ['success' => false, 'message' => 'No Telegram bot token configured.'];
-        }
-
-        try {
-            $response = Http::timeout(15)
-                ->post("https://api.telegram.org/bot{$token}/setWebhook", [
-                    'url' => $url,
-                ]);
-
-            if ($response->successful() && ($response->json('ok') === true)) {
-                return ['success' => true, 'message' => 'Webhook set successfully to ' . $url];
-            }
-
-            return ['success' => false, 'message' => 'Failed to set webhook: ' . ($response->json('description') ?? 'Unknown error')];
-        } catch (\Exception $e) {
-            Log::error('TelegramService::setWebhook error', ['error' => $e->getMessage()]);
-            return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
-        }
+        return $this->botClient->setWebhook($url)->toArray();
     }
 
-    /**
-     * Get current webhook info from the Telegram API.
-     *
-     * @return array Telegram webhook info (url, pending_update_count, etc.) or empty defaults.
-     */
     public function getWebhookInfo(): array
     {
-        $token = $this->getBotToken();
-        if (!$token) {
-            return ['url' => '', 'pending_update_count' => 0];
-        }
-
-        try {
-            $response = Http::timeout(10)
-                ->get("https://api.telegram.org/bot{$token}/getWebhookInfo");
-
-            if ($response->successful() && ($response->json('ok') === true)) {
-                return $response->json('result');
-            }
-
-            return ['url' => '', 'pending_update_count' => 0];
-        } catch (\Exception $e) {
-            Log::error('TelegramService::getWebhookInfo error', ['error' => $e->getMessage()]);
-            return ['url' => '', 'pending_update_count' => 0];
-        }
+        return $this->botClient->getWebhookInfo();
     }
 
-    /**
-     * Send a text message.
-     *
-     * @param string $message Message text (supports HTML).
-     * @param string|null $chatId Target chat ID. Uses default if null.
-     * @return array{success: bool, message: string, data: array|null}
-     */
     public function sendMessage(string $message, ?string $chatId = null): array
     {
-        $token = $this->getBotToken();
-        if (!$token) {
-            return ['success' => false, 'message' => 'No Telegram bot token configured.', 'data' => null];
-        }
-
-        $chat = $chatId ?? $this->getDefaultChatId();
-        if (!$chat) {
-            return ['success' => false, 'message' => 'No Telegram chat ID configured.', 'data' => null];
-        }
-
-        try {
-            $response = Http::timeout(15)
-                ->post("https://api.telegram.org/bot{$token}/sendMessage", [
-                    'chat_id' => $chat,
-                    'text' => $message,
-                    'parse_mode' => 'HTML',
-                    'disable_web_page_preview' => true,
-                ]);
-
-            if ($response->successful()) {
-                $data = $response->json();
-                if ($data['ok'] ?? false) {
-                    return [
-                        'success' => true,
-                        'message' => 'Message sent.',
-                        'data' => ['message_id' => $data['result']['message_id'] ?? null],
-                    ];
-                }
-            }
-
-            $error = $response->json();
-            return ['success' => false, 'message' => 'Telegram error: ' . ($error['description'] ?? 'Unknown'), 'data' => null];
-        } catch (\Exception $e) {
-            Log::error('TelegramService::sendMessage error', ['error' => $e->getMessage()]);
-            return ['success' => false, 'message' => 'Error: ' . $e->getMessage(), 'data' => null];
-        }
+        return $this->push->sendText($message, $chatId)->toArray();
     }
 
-    /**
-     * Send a message with inline keyboard buttons.
-     *
-     * @param string $message Message text.
-     * @param array $buttons Array of rows, each row is array of ['text' => '...', 'callback_data' => '...'].
-     * @param string|null $chatId Target chat ID.
-     * @return array{success: bool, message: string, data: array|null}
-     */
     public function sendMessageWithButtons(string $message, array $buttons, ?string $chatId = null): array
     {
-        $token = $this->getBotToken();
-        if (!$token) {
-            return ['success' => false, 'message' => 'No Telegram bot token configured.', 'data' => null];
-        }
-
-        $chat = $chatId ?? $this->getDefaultChatId();
-        if (!$chat) {
-            return ['success' => false, 'message' => 'No Telegram chat ID configured.', 'data' => null];
-        }
-
-        try {
-            $response = Http::timeout(15)
-                ->post("https://api.telegram.org/bot{$token}/sendMessage", [
-                    'chat_id' => $chat,
-                    'text' => $message,
-                    'parse_mode' => 'HTML',
-                    'reply_markup' => json_encode(['inline_keyboard' => $buttons]),
-                ]);
-
-            if ($response->successful() && ($response->json()['ok'] ?? false)) {
-                return [
-                    'success' => true,
-                    'message' => 'Message with buttons sent.',
-                    'data' => ['message_id' => $response->json()['result']['message_id'] ?? null],
-                ];
-            }
-
-            $error = $response->json();
-            return ['success' => false, 'message' => 'Telegram error: ' . ($error['description'] ?? 'Unknown'), 'data' => null];
-        } catch (\Exception $e) {
-            Log::error('TelegramService::sendMessageWithButtons error', ['error' => $e->getMessage()]);
-            return ['success' => false, 'message' => 'Error: ' . $e->getMessage(), 'data' => null];
-        }
+        return $this->push->sendRichMessage($message, $buttons, $chatId)->toArray();
     }
 
     /**
-     * Send article approval request via Telegram.
-     *
-     * @param int $articleId
-     * @param string $title
-     * @param string $siteName
-     * @param int $wordCount
-     * @param string|null $chatId
-     * @return array{success: bool, message: string, data: array|null}
+     * Deprecated compatibility wrapper.
      */
     public function sendArticleApproval(int $articleId, string $title, string $siteName, int $wordCount, ?string $chatId = null): array
     {
@@ -236,13 +63,7 @@ class TelegramService
     }
 
     /**
-     * Send a notification that an article was published.
-     *
-     * @param string $title
-     * @param string $siteName
-     * @param string|null $wpUrl
-     * @param string|null $chatId
-     * @return array{success: bool, message: string, data: array|null}
+     * Deprecated compatibility wrapper.
      */
     public function notifyPublished(string $title, string $siteName, ?string $wpUrl = null, ?string $chatId = null): array
     {
