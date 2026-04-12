@@ -1,6 +1,8 @@
 <?php
 
+use hexa_package_telegram\Http\Controllers\TelegramSettingController;
 use hexa_package_telegram\Http\Controllers\TelegramController;
+use hexa_package_telegram\Http\Controllers\TelegramWebhookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -9,7 +11,16 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle'])->name('telegram.webhook');
+
 Route::middleware(['web', 'auth', 'locked', 'system_lock', 'two_factor', 'role'])->group(function () {
+    // ── Package Settings ──
+    Route::get('/settings/telegram', [TelegramSettingController::class, 'index'])->name('settings.telegram');
+    Route::post('/settings/telegram', [TelegramSettingController::class, 'save'])->name('settings.telegram.update');
+    Route::post('/settings/telegram/test', [TelegramSettingController::class, 'test'])->name('settings.telegram.test');
+    Route::post('/settings/telegram/webhook', [TelegramSettingController::class, 'setWebhook'])->name('settings.telegram.webhook');
+    Route::get('/settings/telegram/webhook-info', [TelegramSettingController::class, 'webhookInfo'])->name('settings.telegram.webhook-info');
+
     // Raw dev view
     Route::get('/raw-telegram', [TelegramController::class, 'raw'])->name('telegram.index');
 

@@ -2,16 +2,23 @@
 
 namespace hexa_package_telegram\Http\Controllers;
 
+use hexa_core\Http\Controllers\Controller;
+use hexa_package_telegram\Contracts\TelegramPushContract;
+use hexa_package_telegram\Domains\Config\TelegramConfigRepository;
+use hexa_package_telegram\Domains\Webhooks\TelegramWebhookService;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
-use hexa_package_telegram\Services\TelegramService;
-use hexa_core\Models\Setting;
 
 /**
- * TelegramController — handles raw dev view and API test endpoints.
+ * TelegramController — raw/debug tooling for Telegram transport.
  */
 class TelegramController extends Controller
 {
+    public function __construct(
+        protected TelegramConfigRepository $config,
+        protected TelegramPushContract $push,
+        protected TelegramWebhookService $webhooks,
+    ) {}
+
     /**
      * Show the raw development/test page.
      *
@@ -19,13 +26,12 @@ class TelegramController extends Controller
      */
     public function raw()
     {
-        $token = Setting::getValue('telegram_bot_token', '');
-        $chatId = Setting::getValue('telegram_chat_id', '');
+        $status = $this->config->getStatus();
 
         return view('telegram::raw.index', [
-            'tokenConfigured' => !empty($token),
-            'maskedToken' => $token ? str_repeat('*', 8) . substr($token, -4) : '',
-            'chatId' => $chatId,
+            'tokenConfigured' => $status['configured'],
+            'maskedToken'     => $status['masked_bot_token'],
+            'chatId'          => $status['default_chat_id'],
         ]);
     }
 
@@ -41,11 +47,10 @@ class TelegramController extends Controller
             'message' => 'required|string',
         ]);
 
-        $service = app(TelegramService::class);
-        $result = $service->sendMessage(
+        $result = $this->push->sendText(
             $request->input('message'),
             $request->input('chat_id') ?: null
-        );
+        )->toArray();
 
         return response()->json($result);
     }
@@ -57,8 +62,7 @@ class TelegramController extends Controller
      */
     public function webhookInfo()
     {
-        $service = app(TelegramService::class);
-        $info = $service->getWebhookInfo();
+        $info = $this->webhooks->getWebhookInfo();
 
         return response()->json([
             'success' => true,
@@ -79,8 +83,7 @@ class TelegramController extends Controller
             'url' => 'required|url',
         ]);
 
-        $service = app(TelegramService::class);
-        $result = $service->setWebhook($request->input('url'));
+        $result = $this->webhooks->setWebhook($request->input('url'))->toArray();
 
         return response()->json($result);
     }
