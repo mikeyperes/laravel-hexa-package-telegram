@@ -42,6 +42,11 @@ class TelegramServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'telegram');
 
         $registry = app(\hexa_core\Services\PackageRegistryService::class);
+        // HWS-SIDEBAR-MENU-3L-BEGIN
+        $registry->registerDomainGroup('Discovery', 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z', 20);
+        $registry->registerSectionGroup('Sandbox', 'Discovery', '', 20);
+        // HWS-SIDEBAR-MENU-3L-END
+
         $registry->registerSidebarLink('telegram.index', 'Telegram', 'M12 19l9 2-9-18-9 18 9-2zm0 0v-8', 'Sandbox', 'telegram', 82);
         $registry->registerSidebarSettingsLink('Telegram', 'settings.telegram', 42);
         if (method_exists($registry, 'registerPackage')) {
