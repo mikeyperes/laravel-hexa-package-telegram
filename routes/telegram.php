@@ -22,7 +22,11 @@ Route::middleware(['web', 'auth', 'locked', 'system_lock', 'two_factor', 'role']
     Route::get('/settings/telegram/webhook-info', [TelegramSettingController::class, 'webhookInfo'])->name('settings.telegram.webhook-info');
 
     // Raw dev view
-    Route::get('/raw-telegram', [TelegramController::class, 'raw'])->name('telegram.index');
+    Route::hexaRawPage('/raw-telegram', [TelegramController::class, 'raw'], 'telegram.index', [
+        'package' => 'telegram',
+        'label' => 'Console',
+        'sortOrder' => 10,
+    ]);
 
     // AJAX endpoints
     Route::post('/telegram/send', [TelegramController::class, 'send'])->name('telegram.send');

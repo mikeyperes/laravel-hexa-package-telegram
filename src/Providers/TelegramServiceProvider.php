@@ -42,16 +42,6 @@ class TelegramServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'telegram');
 
         $registry = app(\hexa_core\Services\PackageRegistryService::class);
-            // [L1/L2 sidebar hierarchy — auto-registered]
-            $registry->registerDomainGroup('AI', 'M13 10V3L4 14h7v7l9-11h-7z', 50);
-            $registry->registerSectionGroup('Sandbox', 'AI', 'M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 9h-6L8 4z', 53);
-            // [/L1/L2]
-        // HWS-SIDEBAR-MENU-3L-BEGIN
-        $registry->registerDomainGroup('Discovery', 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z', 20);
-        $registry->registerSectionGroup('Sandbox', 'Discovery', '', 20);
-        // HWS-SIDEBAR-MENU-3L-END
-
-        $registry->registerSidebarLink('telegram.index', 'Telegram', 'M12 19l9 2-9-18-9 18 9-2zm0 0v-8', 'Sandbox', 'telegram', 82);
         $registry->registerSidebarSettingsLink('Telegram', 'settings.telegram', 42);
         if (method_exists($registry, 'registerPackage')) {
             $registry->registerPackage('telegram', 'hexawebsystems/laravel-hexa-package-telegram', [
