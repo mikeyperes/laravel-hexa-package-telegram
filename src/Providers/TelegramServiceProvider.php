@@ -11,6 +11,7 @@ use hexa_package_telegram\Domains\Push\TelegramPushService;
 use hexa_package_telegram\Domains\Recipients\TelegramRecipientResolver;
 use hexa_package_telegram\Domains\TwoFactor\TelegramTwoFactorTransport;
 use hexa_package_telegram\Domains\Webhooks\TelegramWebhookService;
+use hexa_package_telegram\Domains\Webhooks\TelegramInboundRouter;
 use Illuminate\Support\ServiceProvider;
 use hexa_package_telegram\Services\TelegramService;
 
@@ -23,6 +24,7 @@ class TelegramServiceProvider extends ServiceProvider
         $this->app->singleton(TelegramBotClient::class);
         $this->app->singleton(TelegramRecipientResolver::class);
         $this->app->singleton(TelegramDeliveryLogger::class);
+        $this->app->singleton(TelegramInboundRouter::class);
         $this->app->singleton(TelegramWebhookService::class);
         $this->app->singleton(TelegramPushContract::class, TelegramPushService::class);
         $this->app->singleton(TelegramTwoFactorTransportContract::class, TelegramTwoFactorTransport::class);
