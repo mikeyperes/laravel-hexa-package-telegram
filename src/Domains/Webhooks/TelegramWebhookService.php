@@ -31,9 +31,9 @@ class TelegramWebhookService
         return $this->botClient->getWebhookInfo($botKey);
     }
 
-    public function handleIncomingUpdate(array $payload): void
+    public function handleIncomingUpdate(array $payload, ?string $botKey = null): void
     {
-        $this->captureInboundChat($payload);
+        $this->captureInboundChat($payload, $botKey);
 
         if ($this->router->dispatch($payload)) {
             return;
@@ -42,7 +42,7 @@ class TelegramWebhookService
         $this->twoFactor->handleWebhook($payload);
     }
 
-    protected function captureInboundChat(array $payload): void
+    protected function captureInboundChat(array $payload, ?string $botKey = null): void
     {
         $chat = $payload["message"]["chat"]
             ?? $payload["edited_message"]["chat"]
@@ -50,7 +50,7 @@ class TelegramWebhookService
             ?? null;
 
         if (is_array($chat)) {
-            $this->config->rememberInboundChat($chat);
+            $this->config->rememberInboundChat($chat, $botKey);
         }
     }
 }

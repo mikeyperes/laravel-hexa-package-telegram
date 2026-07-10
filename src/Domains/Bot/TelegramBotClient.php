@@ -3,12 +3,16 @@
 namespace hexa_package_telegram\Domains\Bot;
 
 use hexa_package_telegram\Domains\Config\TelegramConfigRepository;
+use hexa_package_telegram\Domains\Webhooks\TelegramWebhookSecretService;
 use hexa_package_telegram\DTOs\TelegramDeliveryResult;
 use Illuminate\Support\Facades\Http;
 
 class TelegramBotClient
 {
-    public function __construct(protected TelegramConfigRepository $config) {}
+    public function __construct(
+        protected TelegramConfigRepository $config,
+        protected TelegramWebhookSecretService $webhookSecrets,
+    ) {}
 
     public function testBotToken(?string $token = null, ?string $botKey = null): TelegramDeliveryResult
     {
@@ -43,9 +47,19 @@ class TelegramBotClient
         }
 
         $targetUrl = $url ?: route("telegram.webhook");
+        $targetScheme = strtolower((string) parse_url($targetUrl, PHP_URL_SCHEME));
+        if (!filter_var($targetUrl, FILTER_VALIDATE_URL) || $targetScheme !== 'https') {
+            return TelegramDeliveryResult::failure('Telegram webhook URLs must be valid HTTPS URLs.');
+        }
+
+        $resolvedBotKey = (string) ($botKey ?: $this->config->getActiveBotKey());
+        $secretToken = $this->webhookSecrets->forBot($resolvedBotKey);
 
         try {
-            $response = Http::timeout(15)->post($this->buildUrl("setWebhook", $botToken), ["url" => $targetUrl]);
+            $response = Http::timeout(15)->post($this->buildUrl("setWebhook", $botToken), [
+                "url" => $targetUrl,
+                "secret_token" => $secretToken,
+            ]);
             $data = $response->json() ?: [];
 
             if ($response->successful() && ($data["ok"] ?? false)) {

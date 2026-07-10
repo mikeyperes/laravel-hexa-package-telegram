@@ -5,7 +5,9 @@ use hexa_package_telegram\Http\Controllers\TelegramController;
 use hexa_package_telegram\Http\Controllers\TelegramWebhookController;
 use Illuminate\Support\Facades\Route;
 
-Route::post("/telegram/webhook", [TelegramWebhookController::class, "handle"])->name("telegram.webhook");
+Route::post("/telegram/webhook", [TelegramWebhookController::class, "handle"])
+    ->middleware('throttle:webhook')
+    ->name("telegram.webhook");
 
 Route::middleware(["web", "auth", "locked", "system_lock", "two_factor", "role"])->group(function () {
     Route::get("/settings/telegram", [TelegramSettingController::class, "index"])->name("settings.telegram");
