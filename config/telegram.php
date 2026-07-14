@@ -1,5 +1,5 @@
 <?php
 return [
-    'version' => '4.0.14',
+    'version' => '4.0.15',
     'inbound_handlers' => [],
 ];
