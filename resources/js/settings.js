@@ -1,11 +1,11 @@
-
+const telegramSettingsConfig = JSON.parse(document.getElementById('telegram-settings-config').textContent);
 function telegramSettingsPage() {
     return {
-        bots: @json($status["bots"]),
-        activeBotKey: @json($status["active_bot_key"]),
-        selectedKey: @json($status["active_bot_key"]),
-        updateUrl: @json(route("settings.telegram.update")),
-        botBaseUrl: @json(url("/settings/telegram/bots")),
+        bots: telegramSettingsConfig.bots,
+        activeBotKey: telegramSettingsConfig.activeBotKey,
+        selectedKey: telegramSettingsConfig.activeBotKey,
+        updateUrl: telegramSettingsConfig.updateUrl,
+        botBaseUrl: telegramSettingsConfig.botBaseUrl,
         csrf: document.querySelector("meta[name=csrf-token]").content,
         form: {},
         webhookInfo: { url: "", pending_update_count: 0, last_error_message: "" },

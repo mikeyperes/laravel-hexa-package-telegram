@@ -13,6 +13,7 @@ use hexa_package_telegram\Domains\TwoFactor\TelegramTwoFactorTransport;
 use hexa_package_telegram\Domains\Webhooks\TelegramWebhookService;
 use hexa_package_telegram\Domains\Webhooks\TelegramInboundRouter;
 use Illuminate\Support\ServiceProvider;
+use hexa_core\Support\PackageAssetRegistry;
 use hexa_package_telegram\Services\TelegramService;
 
 class TelegramServiceProvider extends ServiceProvider
@@ -42,6 +43,11 @@ class TelegramServiceProvider extends ServiceProvider
     {
         $this->loadRoutesFrom(__DIR__ . '/../../routes/telegram.php');
         $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'telegram');
+
+        app(PackageAssetRegistry::class)->register('telegram', dirname(__DIR__, 2) . '/resources/js', [
+            'raw-tools.js',
+            'settings.js',
+        ]);
 
         $registry = app(\hexa_core\Services\PackageRegistryService::class);
         $registry->registerSidebarSettingsLink('Telegram', 'settings.telegram', 42);

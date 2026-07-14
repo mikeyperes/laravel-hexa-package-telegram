@@ -1,5 +1,5 @@
-
-const CSRF_TOKEN = '{{ csrf_token() }}';
+const telegramRawConfig = JSON.parse(document.getElementById('telegram-raw-config').textContent);
+const CSRF_TOKEN = telegramRawConfig.csrf;
 const SPINNER_SVG = '<svg class="animate-spin h-4 w-4 inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
 
 function setButtonLoading(btn, loadingText) {
@@ -38,7 +38,7 @@ function telegramSend() {
     body.append('message', message);
     if (chatId) body.append('chat_id', chatId);
 
-    fetch('{{ route("telegram.send") }}', { method: 'POST', body: body })
+    fetch(telegramRawConfig.sendUrl, { method: 'POST', body: body })
         .then(function(r) { return r.json(); })
         .then(function(data) {
             var html = resultBanner(data.success, data.message);
@@ -64,7 +64,7 @@ function telegramWebhookInfo() {
     var body = new FormData();
     body.append('_token', CSRF_TOKEN);
 
-    fetch('{{ route("telegram.webhook-info") }}', { method: 'POST', body: body })
+    fetch(telegramRawConfig.webhookInfoUrl, { method: 'POST', body: body })
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.success && data.data) {
@@ -111,7 +111,7 @@ function telegramSetWebhook() {
     body.append('_token', CSRF_TOKEN);
     body.append('url', url);
 
-    fetch('{{ route("telegram.set-webhook") }}', { method: 'POST', body: body })
+    fetch(telegramRawConfig.setWebhookUrl, { method: 'POST', body: body })
         .then(function(r) { return r.json(); })
         .then(function(data) {
             resultEl.innerHTML = resultBanner(data.success, data.message);

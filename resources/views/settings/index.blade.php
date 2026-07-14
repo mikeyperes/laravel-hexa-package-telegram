@@ -284,6 +284,6 @@
 </div>
 
 @push("scripts")
-<script>@include('telegram::scripts.settings-index.block-1-part-1')</script>
+@include("telegram::settings.scripts")
 @endpush
 @endsection

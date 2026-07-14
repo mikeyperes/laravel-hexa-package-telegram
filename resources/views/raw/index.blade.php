@@ -131,6 +131,6 @@
 </div>
 
 @push('scripts')
-<script>@include('telegram::scripts.raw-index.block-1-part-1')</script>
+    @include("telegram::raw.scripts")
 @endpush
 @endsection
