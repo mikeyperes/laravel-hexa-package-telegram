@@ -64,6 +64,29 @@ class TelegramConfigRepository
         return trim($username, "@ \t\n\r");
     }
 
+    /**
+     * Return the Telegram Bot API webhook secret token. An explicit token may
+     * be supplied by environment; otherwise derive a stable, non-reversible
+     * token from this application's key so webhook authentication cannot
+     * silently become optional.
+     */
+    public function getWebhookSecretToken(): ?string
+    {
+        $configured = trim((string) config("telegram.webhook_secret_token", ""));
+        if ($configured !== "") {
+            return preg_match('/\A[A-Za-z0-9_-]{1,256}\z/', $configured) === 1
+                ? $configured
+                : null;
+        }
+
+        $applicationKey = trim((string) config("app.key", ""));
+        if ($applicationKey === "") {
+            return null;
+        }
+
+        return hash_hmac("sha256", "hexa-telegram-webhook-v1", $applicationKey);
+    }
+
     public function getDefaultChatId(?string $botKey = null): ?string
     {
         $key = $this->botKey($botKey);

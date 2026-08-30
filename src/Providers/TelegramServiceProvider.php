@@ -12,6 +12,9 @@ use hexa_package_telegram\Domains\Recipients\TelegramRecipientResolver;
 use hexa_package_telegram\Domains\TwoFactor\TelegramTwoFactorTransport;
 use hexa_package_telegram\Domains\Webhooks\TelegramWebhookService;
 use hexa_package_telegram\Domains\Webhooks\TelegramInboundRouter;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use hexa_core\Support\PackageAssetRegistry;
 use hexa_package_telegram\Services\TelegramService;
@@ -41,6 +44,14 @@ class TelegramServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RateLimiter::for("telegram-webhook", function (Request $request): array {
+            $perMinute = max(1, min((int) config("telegram.webhook_throttle_per_minute", 120), 600));
+
+            return [
+                Limit::perMinute($perMinute)->by("telegram-webhook:ip:" . hash("sha256", (string) $request->ip())),
+            ];
+        });
+
         $this->loadRoutesFrom(__DIR__ . '/../../routes/telegram.php');
         $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'telegram');
 
