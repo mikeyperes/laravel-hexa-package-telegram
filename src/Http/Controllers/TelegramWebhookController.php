@@ -15,9 +15,9 @@ class TelegramWebhookController extends Controller
         protected TelegramConfigRepository $config,
     ) {}
 
-    public function handle(Request $request): Response
+    public function handle(Request $request, ?string $botKey = null): Response
     {
-        $expectedSecret = $this->config->getWebhookSecretToken();
+        $expectedSecret = $botKey !== null ? $this->config->getBoundWebhookSecret($botKey) : $this->config->getWebhookSecretToken();
         $providedSecret = trim((string) $request->header("X-Telegram-Bot-Api-Secret-Token", ""));
         if (!$expectedSecret || !hash_equals(hash("sha256", $expectedSecret), hash("sha256", $providedSecret))) {
             return $this->response("forbidden", 403);
@@ -34,6 +34,8 @@ class TelegramWebhookController extends Controller
             return $this->response("invalid payload", 422);
         }
 
+        unset($payload['_hexa_transport']);
+        if ($botKey !== null) $payload['_hexa_transport']=['channel'=>'telegram','account'=>$botKey];
         $this->webhooks->handleIncomingUpdate($payload);
 
         return $this->response("ok");

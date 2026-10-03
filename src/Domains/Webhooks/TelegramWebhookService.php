@@ -18,7 +18,8 @@ class TelegramWebhookService
 
     public function setDefaultWebhook(?string $botKey = null): TelegramDeliveryResult
     {
-        return $this->botClient->setWebhook(route("telegram.webhook"), $botKey);
+        $botKey ??= $this->config->getActiveBotKey();
+        return $this->botClient->setWebhook(route('telegram.webhook.account',['botKey'=>$botKey]), $botKey);
     }
 
     public function setWebhook(string $url, ?string $botKey = null): TelegramDeliveryResult
@@ -50,7 +51,7 @@ class TelegramWebhookService
             ?? null;
 
         if (is_array($chat)) {
-            $this->config->rememberInboundChat($chat);
+            $this->config->rememberInboundChat($chat, $payload['_hexa_transport']['account'] ?? null);
         }
     }
 }

@@ -87,6 +87,14 @@ class TelegramConfigRepository
         return hash_hmac("sha256", "hexa-telegram-webhook-v1", $applicationKey);
     }
 
+    /** Each bot has a different transport authority, independent of the active bot. */
+    public function getBoundWebhookSecret(string $botKey): ?string
+    {
+        if (!preg_match('/^[a-z0-9_-]{1,80}$/', $botKey) || !$this->findBot($botKey)) return null;
+        $secret=$this->getWebhookSecretToken();
+        return $secret ? hash_hmac('sha256', 'hexa-telegram-account:'.$botKey, $secret) : null;
+    }
+
     public function getDefaultChatId(?string $botKey = null): ?string
     {
         $key = $this->botKey($botKey);

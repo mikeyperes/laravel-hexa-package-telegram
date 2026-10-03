@@ -43,7 +43,8 @@ class TelegramBotClient
         }
 
         $targetUrl = $url ?: route("telegram.webhook");
-        $secretToken = $this->config->getWebhookSecretToken();
+        $secretToken = $botKey !== null && $targetUrl === route('telegram.webhook.account',['botKey'=>$botKey])
+            ? $this->config->getBoundWebhookSecret($botKey) : $this->config->getWebhookSecretToken();
         if (!$secretToken) {
             return TelegramDeliveryResult::failure("Telegram webhook authentication is not configured.");
         }

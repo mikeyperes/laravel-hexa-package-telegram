@@ -116,6 +116,29 @@ class TelegramWebhookSecurityTest extends TestCase
         $this->assertContains('throttle:telegram-webhook', $route->gatherMiddleware());
     }
 
+    public function test_account_secret_and_server_identity_are_bound(): void
+    {
+        $config=Mockery::mock(TelegramConfigRepository::class);
+        $config->shouldReceive('getBoundWebhookSecret')->twice()->with('review')->andReturn('review-secret');
+        $webhooks=Mockery::mock(TelegramWebhookService::class);
+        $payload=['update_id'=>5,'message'=>['text'=>'approve'],'_hexa_transport'=>['channel'=>'telegram','account'=>'other']];
+        $expected=$payload;$expected['_hexa_transport']=['channel'=>'telegram','account'=>'review'];
+        $webhooks->shouldReceive('handleIncomingUpdate')->once()->with($expected);
+        $controller=new TelegramWebhookController($webhooks,$config);
+        $this->assertSame(403,$controller->handle($this->request($payload,'other-secret'),'review')->getStatusCode());
+        $this->assertSame(200,$controller->handle($this->request($payload,'review-secret'),'review')->getStatusCode());
+    }
+
+    public function test_legacy_webhook_cannot_forge_account_authority(): void
+    {
+        $payload=['update_id'=>6,'_hexa_transport'=>['channel'=>'telegram','account'=>'review']];
+        $config=Mockery::mock(TelegramConfigRepository::class);
+        $config->shouldReceive('getWebhookSecretToken')->once()->andReturn('legacy-secret');
+        $webhooks=Mockery::mock(TelegramWebhookService::class);
+        $webhooks->shouldReceive('handleIncomingUpdate')->once()->with(['update_id'=>6]);
+        $this->assertSame(200,(new TelegramWebhookController($webhooks,$config))->handle($this->request($payload,'legacy-secret'))->getStatusCode());
+    }
+
     /**
      * @param  array<string, mixed>  $payload
      */

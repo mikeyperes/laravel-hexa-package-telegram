@@ -1,6 +1,6 @@
 <?php
 return [
-    'version' => '4.0.15',
+    'version' => '4.1.0',
     'inbound_handlers' => [],
     'webhook_secret_token' => env('HWS_TELEGRAM_WEBHOOK_SECRET_TOKEN', ''),
     'webhook_max_payload_bytes' => (int) env('HWS_TELEGRAM_WEBHOOK_MAX_PAYLOAD_BYTES', 1048576),

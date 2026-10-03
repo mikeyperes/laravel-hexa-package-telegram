@@ -9,6 +9,9 @@ Route::post("/telegram/webhook", [TelegramWebhookController::class, "handle"])
     ->middleware("throttle:telegram-webhook")
     ->name("telegram.webhook");
 
+Route::post('/telegram/webhook/{botKey}', [TelegramWebhookController::class, 'handle'])
+    ->where('botKey','[a-z0-9_-]{1,80}')->middleware('throttle:telegram-webhook')->name('telegram.webhook.account');
+
 Route::middleware(["web", "auth", "locked", "system_lock", "two_factor", "role"])->group(function () {
     Route::get("/settings/telegram", [TelegramSettingController::class, "index"])->name("settings.telegram");
     Route::post("/settings/telegram", [TelegramSettingController::class, "save"])->name("settings.telegram.update");
